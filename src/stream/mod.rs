@@ -23,7 +23,7 @@ pub use self::write::{AutoFinishEncoder, Encoder};
 
 #[doc(hidden)]
 #[macro_export]
-macro_rules! readwritecommon {
+macro_rules! encoder_readwritecommon {
     ($readwrite:ident) => {
         /// Controls whether zstd should include a content checksum at the end
         /// of each frame.
@@ -91,5 +91,38 @@ macro_rules! readwritecommon {
                 },
             )
         }
+
+        /// get inner raw::Encoder. useful for setting CCtx CParameters
+        pub fn get_operation_mut(&mut self) -> &'a mut crate::stream::raw::Encoder {
+            self.$readwrite.operation_mut()
+        }
     };
+}
+
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! decoder_readwritecommon {
+    ($readwrite:ident) => {
+        /// Enables or disabled expecting the 4-byte magic header
+        pub fn include_magicbytes(
+            &mut self,
+            include_magicbytes: bool,
+        ) -> io::Result<()> {
+            self.$readwrite
+                .operation_mut()
+                .set_parameter(if include_magicbytes {
+                    zstd_safe::DParameter::Format(zstd_safe::FrameFormat::One)
+                } else {
+                    zstd_safe::DParameter::Format(
+                        zstd_safe::FrameFormat::Magicless,
+                    )
+                })
+        }
+
+        /// get inner raw::Decoder. useful for setting DCtx DParameters
+        pub fn get_operation_mut(&mut self) -> &'a mut crate::stream::raw::Decoder {
+            self.$readwrite.operation_mut()
+        }
+    }
 }

@@ -217,7 +217,7 @@ impl<'a, W: Write> Encoder<'a, W> {
         zstd_safe::CCtx::in_size()
     }
 
-    crate::readwritecommon!(writer);
+    crate::encoder_readwritecommon!(writer);
 }
 
 impl<'a, W: Write> Write for Encoder<'a, W> {
@@ -273,21 +273,7 @@ impl<'a, W: Write> Decoder<'a, W> {
         Ok(Decoder { writer })
     }
 
-    /// Enables or disabled expecting the 4-byte magic header
-    pub fn include_magicbytes(
-        &mut self,
-        include_magicbytes: bool,
-    ) -> io::Result<()> {
-        self.writer
-            .operation_mut()
-            .set_parameter(if include_magicbytes {
-                zstd_safe::DParameter::Format(zstd_safe::FrameFormat::One)
-            } else {
-                zstd_safe::DParameter::Format(
-                    zstd_safe::FrameFormat::Magicless,
-                )
-            })
-    }
+    crate::decoder_readwritecommon!(writer);
 
     /// Acquires a reference to the underlying writer.
     pub fn get_ref(&self) -> &W {

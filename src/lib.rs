@@ -30,6 +30,8 @@ pub mod stream;
 
 use std::io;
 
+pub use zstd_safe;
+
 /// Default compression level.
 pub use zstd_safe::CLEVEL_DEFAULT as DEFAULT_COMPRESSION_LEVEL;
 
