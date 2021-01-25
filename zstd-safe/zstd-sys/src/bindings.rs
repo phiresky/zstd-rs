@@ -511,6 +511,7 @@ pub enum ZSTD_dParameter {
     ZSTD_d_experimentalParam1 = 1000,
     ZSTD_d_experimentalParam2 = 1001,
     ZSTD_d_experimentalParam3 = 1002,
+    ZSTD_d_experimentalParam4 = 1003,
 }
 extern "C" {
     #[doc = " ZSTD_dParam_getBounds() :"]
@@ -958,7 +959,7 @@ extern "C" {
     #[doc = "  Reference a prepared dictionary, to be used for all next compressed frames."]
     #[doc = "  Note that compression parameters are enforced from within CDict,"]
     #[doc = "  and supersede any compression parameter previously set within CCtx."]
-    #[doc = "  The parameters ignored are labled as \"superseded-by-cdict\" in the ZSTD_cParameter enum docs."]
+    #[doc = "  The parameters ignored are labelled as \"superseded-by-cdict\" in the ZSTD_cParameter enum docs."]
     #[doc = "  The ignored parameters will be used again if the CCtx is returned to no-dictionary mode."]
     #[doc = "  The dictionary will remain valid for future compressed frames using same CCtx."]
     #[doc = " @result : 0, or an error code (which can be tested with ZSTD_isError())."]
@@ -1021,6 +1022,13 @@ extern "C" {
     #[doc = " ZSTD_DCtx_refDDict() :"]
     #[doc = "  Reference a prepared dictionary, to be used to decompress next frames."]
     #[doc = "  The dictionary remains active for decompression of future frames using same DCtx."]
+    #[doc = ""]
+    #[doc = "  If called with ZSTD_d_refMultipleDDicts enabled, repeated calls of this function"]
+    #[doc = "  will store the DDict references in a table, and the DDict used for decompression"]
+    #[doc = "  will be determined at decompression time, as per the dict ID in the frame."]
+    #[doc = "  The memory for the table is allocated on the first call to refDDict, and can be"]
+    #[doc = "  freed with ZSTD_freeDCtx()."]
+    #[doc = ""]
     #[doc = " @result : 0, or an error code (which can be tested with ZSTD_isError())."]
     #[doc = "  Note 1 : Currently, only one dictionary can be managed."]
     #[doc = "           Referencing a new dictionary effectively \"discards\" any previous one."]

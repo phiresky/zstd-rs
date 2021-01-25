@@ -545,6 +545,7 @@ pub enum ZSTD_dParameter {
     ZSTD_d_experimentalParam1 = 1000,
     ZSTD_d_experimentalParam2 = 1001,
     ZSTD_d_experimentalParam3 = 1002,
+    ZSTD_d_experimentalParam4 = 1003,
 }
 extern "C" {
     #[doc = " ZSTD_dParam_getBounds() :"]
@@ -994,7 +995,7 @@ extern "C" {
     #[doc = "  Reference a prepared dictionary, to be used for all next compressed frames."]
     #[doc = "  Note that compression parameters are enforced from within CDict,"]
     #[doc = "  and supersede any compression parameter previously set within CCtx."]
-    #[doc = "  The parameters ignored are labled as \"superseded-by-cdict\" in the ZSTD_cParameter enum docs."]
+    #[doc = "  The parameters ignored are labelled as \"superseded-by-cdict\" in the ZSTD_cParameter enum docs."]
     #[doc = "  The ignored parameters will be used again if the CCtx is returned to no-dictionary mode."]
     #[doc = "  The dictionary will remain valid for future compressed frames using same CCtx."]
     #[doc = " @result : 0, or an error code (which can be tested with ZSTD_isError())."]
@@ -1057,6 +1058,13 @@ extern "C" {
     #[doc = " ZSTD_DCtx_refDDict() :"]
     #[doc = "  Reference a prepared dictionary, to be used to decompress next frames."]
     #[doc = "  The dictionary remains active for decompression of future frames using same DCtx."]
+    #[doc = ""]
+    #[doc = "  If called with ZSTD_d_refMultipleDDicts enabled, repeated calls of this function"]
+    #[doc = "  will store the DDict references in a table, and the DDict used for decompression"]
+    #[doc = "  will be determined at decompression time, as per the dict ID in the frame."]
+    #[doc = "  The memory for the table is allocated on the first call to refDDict, and can be"]
+    #[doc = "  freed with ZSTD_freeDCtx()."]
+    #[doc = ""]
     #[doc = " @result : 0, or an error code (which can be tested with ZSTD_isError())."]
     #[doc = "  Note 1 : Currently, only one dictionary can be managed."]
     #[doc = "           Referencing a new dictionary effectively \"discards\" any previous one."]
@@ -1446,6 +1454,12 @@ pub enum ZSTD_forceIgnoreChecksum_e {
 }
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum ZSTD_refMultipleDDicts_e {
+    ZSTD_rmd_refSingleDDict = 0,
+    ZSTD_rmd_refMultipleDDicts = 1,
+}
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum ZSTD_dictAttachPref_e {
     ZSTD_dictDefaultAttach = 0,
     ZSTD_dictForceAttach = 1,
@@ -1498,7 +1512,7 @@ extern "C" {
     #[doc = "  `srcSize` must be the _exact_ size of this series"]
     #[doc = "       (i.e. there should be a frame boundary at `src + srcSize`)"]
     #[doc = "  @return : - upper-bound for the decompressed size of all data in all successive frames"]
-    #[doc = "            - if an error occured: ZSTD_CONTENTSIZE_ERROR"]
+    #[doc = "            - if an error occurred: ZSTD_CONTENTSIZE_ERROR"]
     #[doc = ""]
     #[doc = "  note 1  : an error can occur if `src` contains an invalid or incorrectly formatted frame."]
     #[doc = "  note 2  : the upper-bound is exact when the decompressed size field is available in every ZSTD encoded frame of `src`."]
@@ -1601,6 +1615,27 @@ extern "C" {
         inSeqsSize: usize,
         src: *const ::core::ffi::c_void,
         srcSize: usize,
+    ) -> usize;
+}
+extern "C" {
+    #[doc = " ZSTD_writeSkippableFrame() :"]
+    #[doc = " Generates a zstd skippable frame containing data given by src, and writes it to dst buffer."]
+    #[doc = ""]
+    #[doc = " Skippable frames begin with a a 4-byte magic number. There are 16 possible choices of magic number,"]
+    #[doc = " ranging from ZSTD_MAGIC_SKIPPABLE_START to ZSTD_MAGIC_SKIPPABLE_START+15."]
+    #[doc = " As such, the parameter magicVariant controls the exact skippable frame magic number variant used, so"]
+    #[doc = " the magic number used will be ZSTD_MAGIC_SKIPPABLE_START + magicVariant."]
+    #[doc = ""]
+    #[doc = " Returns an error if destination buffer is not large enough, if the source size is not representable"]
+    #[doc = " with a 4-byte unsigned int, or if the parameter magicVariant is greater than 15 (and therefore invalid)."]
+    #[doc = ""]
+    #[doc = " @return : number of bytes written or a ZSTD error."]
+    pub fn ZSTD_writeSkippableFrame(
+        dst: *mut ::core::ffi::c_void,
+        dstCapacity: usize,
+        src: *const ::core::ffi::c_void,
+        srcSize: usize,
+        magicVariant: ::std::os::raw::c_uint,
     ) -> usize;
 }
 extern "C" {
